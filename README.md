@@ -15,7 +15,7 @@ This is a project for ML course: [link ](https://stepik.org/course/177215/syllab
 
 ## Service:
 
-Streamlit service is available at [rateyourflight.streamlit.app](https://rateyourflight.streamlit.app/) via Streamlit Cloud
+Streamlit service is available at [https://bank-clients-answers.streamlit.app](https://bank-clients-answers.streamlit.app)
 
 To run locally, clone the repo and do the following:
 
