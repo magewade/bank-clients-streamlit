@@ -16,6 +16,13 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from matplotlib.colors import LinearSegmentedColormap
+from sklearn.metrics import (
+    confusion_matrix,
+    accuracy_score,
+    recall_score,
+    fbeta_score,
+    roc_auc_score,
+)
 
 
 st.set_page_config(layout="wide")
@@ -136,13 +143,12 @@ with tab2:
     st.subheader("Описание модели")
     st.write(
         """
-    Для предсказания отклика клиентов используется **RidgeClassifier** – линейная модель классификации с L2-регуляризацией. RidgeClassifier является аналогом логистической регрессии, но использует **гребневую (L2) регуляризацию**, что помогает бороться с переобучением, особенно при наличии коррелированных признаков.  
-    
+    Для предсказания отклика клиентов используется **LogisticRegression** – линейная модель классификации. Логистическая регрессия применяет функцию логистической регрессии для прогнозирования вероятности, что клиент согласится на предложение. Это классическая модель для задач бинарной классификации.
+
     Перед обучением данные проходят предварительную обработку с помощью **ColumnTransformer**:
-    - Числовые признаки стандартизируются с помощью **StandardScaler**, что приводит их к нормальному распределению с нулевым средним и единичной дисперсией. Это помогает RidgeClassifier лучше работать, так как он чувствителен к масштабу данных.
-    - Категориальные признаки кодируются методом **One-Hot Encoding**
-    
-    Дополнительно в модели используется параметр `class_weight="balanced"`, который автоматически учитывает дисбаланс классов, повышая вес редкого класса. Это особенно полезно, если откликов на предложения банка значительно меньше, чем отказов.
+    - Числовые признаки стандартизируются с помощью **StandardScaler**, что приводит их к нормальному распределению с нулевым средним и единичной дисперсией. Это помогает LogisticRegression лучше работать, так как она чувствительна к масштабу данных.
+    - Категориальные признаки кодируются методом **One-Hot Encoding**.
+
     """
     )
 
@@ -173,38 +179,71 @@ with tab2:
     Вы можете изменять порог с помощью ползунка, чтобы увидеть, как это влияет на конфьюжн матрицу и соответствующие метрики. Это позволяет выбрать оптимальное значение порога, которое лучше всего соответствует вашей задаче.
     """)
 
+    # Ваши данные и функции
     X, y, numerical, categorical, preprocessor = preprocess_data(df)
     model = load_model()
     y_pred_proba = expit(model.decision_function(X))  # Преобразуем логиты в вероятности
-    # Добавляем слайдер для выбора трешхолда
-    threshold = st.slider("Выбери порог для меток", 0.0, 1.0, 0.46, 0.01)
+
+    # Добавляем слайдер для выбора порога
+    threshold = st.slider("Выбери порог для меток", 0.0, 1.0, 0.38, 0.01)
     y_pred_thresholded = (y_pred_proba >= threshold).astype(int)
 
+    # Строим Confusion Matrix
     cm = confusion_matrix(y, y_pred_thresholded)
     fig, ax = plt.subplots(figsize=(4, 3))
     sns.heatmap(
         cm,
         annot=True,
         fmt="d",
-        cmap=cmap,
+        cmap=cmap, 
         xticklabels=["0", "1"],
         yticklabels=["0", "1"],
-        ax=ax
+        ax=ax,
     )
-    ax.set_xlabel("Предсказанный класс")
-    ax.set_ylabel("Истинный класс")
-    ax.set_title("Confusion Matrix")
-    st.pyplot(fig, use_container_width=False)
+
+    # Уменьшаем шрифт
+    ax.set_xlabel("Предсказанный класс", fontsize=8)
+    ax.set_ylabel("Истинный класс", fontsize=8)
+    ax.set_title("Confusion Matrix", fontsize=10)
+
+    # Настроим размер шрифта для аннотированных чисел
+    for label in ax.get_xticklabels() + ax.get_yticklabels():
+        label.set_fontsize(7)
+
+
+    # Размещение графика и метрик рядом
+    col1, col2 = st.columns([2, 1])  # 2: для графика, 1: для метрик
+    with col1:
+        st.pyplot(fig, use_container_width=False)  # График Confusion Matrix
+
+    with col2:
+        # Вычисление метрик
+        accuracy = accuracy_score(y, y_pred_thresholded)
+        recall = recall_score(y, y_pred_thresholded)
+        f2 = fbeta_score(y, y_pred_thresholded, beta=2)
+        roc_auc = roc_auc_score(y, y_pred_proba)
+
+        # Отображение метрик в виде таблицы
+        st.subheader("Метрики модели")
+        st.write(f"**Threshold:** {threshold:.2f} - порог")
+        st.write(f"**Accuracy:** {accuracy:.2f} – доля правильных предсказаний")
+        st.write(
+            f"**Recall:** {recall:.2f} – насколько хорошо модель находит откликнувшихся клиентов"
+        )
+        st.write(f"**F2-score:** {f2:.2f} – ключевая метрика, учитывающая важность полноты")
+        st.write(
+            f"**ROC-AUC:** {roc_auc:.2f} – качество модели на разных порогах классификации"
+        )
 
     st.subheader("Финальные метрики модели")
     st.write(
         """
     После подбора трешхолда по **F2-мере**, модель достигла следующих показателей на тестовой выборке:
-    - **Threshold:** 0.46 - оптимальный порог
-    - **Accuracy:** 0.40 – доля правильных предсказаний
-    - **Recall:** 0.84 – насколько хорошо модель находит откликнувшихся клиентов
-    - **F2-score:** 0.43 – ключевая метрика, учитывающая важность полноты
-    - **ROC-AUC:** 0.63 – качество модели на разных порогах классификации
+    - **Threshold:** 0.38 - оптимальный порог
+    - **Accuracy:** 0.36 – доля правильных предсказаний
+    - **Recall:** 0.89 – насколько хорошо модель находит откликнувшихся клиентов
+    - **F2-score:** 0.44 – ключевая метрика, учитывающая важность полноты
+    - **ROC-AUC:** 0.66 – качество модели на разных порогах классификации
     """
     )
 
@@ -338,7 +377,7 @@ with tab3:
             else:
                 st.markdown(
                     f'<div style="background-color: #E9A098; padding: 10px; color: white;">'
-                    f'Предсказание: {"Да" if pred == 1 else "Нет"} (вероятность: {proba:.2f})'
+                    f'Предсказание: {"Да" if pred == 1 else "Нет"} (уверенность: {proba:.2f})'
                     f"</div>",
                     unsafe_allow_html=True,
                 )

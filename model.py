@@ -4,11 +4,10 @@ import pickle
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.linear_model import RidgeClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics import accuracy_score, roc_auc_score, recall_score, fbeta_score
-from scipy.special import expit
 
 pd.options.mode.chained_assignment = None
 
@@ -51,15 +50,18 @@ def preprocess_data(df: pd.DataFrame):
 
 
 def fit_and_save_model(X_train, X_val, y_train, y_val, preprocessor):
-    """Fits RidgeClassifier model and returns predictions"""
+    """Fits LogisticRegression model and returns predictions"""
     model = Pipeline(
         [
             ("preprocessor", preprocessor),
-            ("classifier", RidgeClassifier(alpha=1.0, class_weight="balanced")),
+            (
+                "classifier",
+                LogisticRegression(class_weight="balanced", solver="liblinear"),
+            ),
         ]
     )
     model.fit(X_train, y_train)
-    y_pred_proba = expit(model.decision_function(X_val))
+    y_pred_proba = model.predict_proba(X_val)[:, 1]
     return model, y_pred_proba
 
 
@@ -114,7 +116,7 @@ def load_threshold(file_path="data/best_threshold.txt"):
 
 def predict_on_input(df, model, threshold):
     """Returns prediction and probability using the optimal threshold"""
-    proba = expit(model.decision_function(df))[0]
+    proba = model.predict_proba(df)[:, 1][0]
     pred = int(proba >= threshold)
     return pred, proba
 
@@ -129,12 +131,6 @@ def evaluate_model(y_true, y_pred_proba, threshold):
     f2 = fbeta_score(y_true, y_pred_thresholded, beta=2)
 
     return accuracy, roc_auc, recall, f2
-
-
-def load_threshold(file_path="data/best_threshold.txt"):
-    """Загружает сохранённый порог"""
-    with open(file_path, "r") as f:
-        return float(f.read())
 
 
 if __name__ == "__main__":

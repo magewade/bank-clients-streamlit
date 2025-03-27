@@ -1,19 +1,12 @@
-
 # **Bank Clients Prediction: Predicting Customer Acceptance**
-
-This project is part of my Machine Learning course. In this project, I worked on a classification problem where the goal was to predict whether a bank client would agree to a banking offer based on various features. I used linear models, specifically Ridge Regression, to build and evaluate the model.
 
 Course details: [Machine Learning Course on Stepik](https://stepik.org/course/177215/syllabus)
 
 Project language: Russian
 
+This project is part of my Machine Learning course. In this project, I worked on a classification problem where the goal was to predict whether a bank client would agree to a banking offer based on various features. I used Logistic Regression to build and evaluate the model.
+
 ---
-
-## **Overview**
-
-This project involves building a predictive model using the bank clients dataset. The objective is to predict if a client will accept a banking offer based on a range of features, such as their demographic information, account details, and past behavior.
-
-The Ridge Regression model was chosen due to its ability to handle multicollinearity, prevent overfitting, and provide regularization, making it ideal for this classification problem. Moreover, Ridge Regression is a simple and fast model, which makes it efficient for real-time predictions without requiring significant computational resources.
 
 ## **Files:**
 
@@ -49,9 +42,11 @@ $ streamlit run app.py
 
 ## **Model Overview:**
 
-The model used to predict whether a client will accept a banking offer is based on** ** **Ridge Regression** , a linear model that adds an L2 regularization term to the linear regression cost function. This approach helps reduce overfitting and provides more stable predictions, especially when features are highly correlated.
+This project involves building a predictive model using the bank clients dataset. The objective is to predict if a client will accept a banking offer based on a range of features, such as their demographic information, account details, and past behavior.
 
-### **Steps Involved:**
+The **Logistic Regression** model was chosen due to its effectiveness in binary classification tasks. It models the probability that a given input point belongs to a certain class, making it well-suited for predicting whether a client will accept a banking offer. Logistic Regression is widely used for classification problems because of its simplicity, interpretability, and efficiency in terms of both computation and storage. Additionally, it helps prevent overfitting when combined with regularization, such as **L2 regularization** (which is often used to improve the model’s generalization ability).
+
+**Steps Involved:**
 
 1. **Exploratory Data Analysis (EDA):**
    The first step was to analyze the dataset visually and statistically to understand the relationships between features and target labels. Correlations, distributions, and outliers were explored.
@@ -72,8 +67,6 @@ The model used to predict whether a client will accept a banking offer is based 
    After entering the details, the model will predict whether the client will accept the bank's offer (i.e., the prediction will be either "Yes" or "No").
 
 ---
-
-
 
 ## **Technologies Used:**
 
